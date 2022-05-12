@@ -1,7 +1,8 @@
 import {Component, OnInit} from '@angular/core';
-import {FaceSnap} from "../models/face-snap.models";
-import {FaceSnapService} from "../service/face-snap.service";
+import {FaceSnap} from "../core/models/face-snap.models";
+import {FaceSnapService} from "../core/service/face-snap.service";
 import {ActivatedRoute} from "@angular/router";
+import {Observable, tap} from "rxjs";
 
 @Component({
   selector: 'app-single-face-snap',
@@ -9,7 +10,7 @@ import {ActivatedRoute} from "@angular/router";
   styleUrls: ['./single-face-snap.component.scss']
 })
 export class SingleFaceSnapComponent implements OnInit {
-  faceSnap!: FaceSnap;
+  faceSnap$!: Observable<FaceSnap>;
   buttonText!: String;
 
   constructor(private faceSnapsService: FaceSnapService,
@@ -20,17 +21,19 @@ export class SingleFaceSnapComponent implements OnInit {
 
   ngOnInit() {
     const snapId = +this.route.snapshot.params['id']
-    this.faceSnap = this.faceSnapsService.getFaceSnapById(snapId);
+    this.faceSnap$ = this.faceSnapsService.getFaceSnapById(snapId);
     this.buttonText = 'Oh Snap!'
   }
 
-  onSnap(){
-    if(this.buttonText === 'Oh Snap!'){
-      this.faceSnapsService.snapFaceSnapById(this.faceSnap.id, 'snap');
-      this.buttonText = 'Oops, un Snap!'
+  onSnap(id: number) {
+    if (this.buttonText === 'Oh Snap!') {
+      this.faceSnap$ = this.faceSnapsService.snapFaceSnapById(id, 'snap').pipe(
+        tap(() => this.buttonText = 'Oops, un Snap!')
+      );
     } else {
-      this.faceSnapsService.snapFaceSnapById(this.faceSnap.id, 'unsnap');
-      this.buttonText = 'Oh Snap!'
+      this.faceSnap$ = this.faceSnapsService.snapFaceSnapById(id, 'unsnap').pipe(
+        tap(() => this.buttonText = 'Oh Snap!')
+      );
     }
   }
 
